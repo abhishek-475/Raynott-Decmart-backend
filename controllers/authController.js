@@ -197,13 +197,11 @@ exports.getProfile = async (req, res) => {
     
     if (!user) {
       return res.status(404).json({ 
-        success: false,
         message: "User not found" 
       });
     }
 
     res.json({
-      success: true,
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -215,7 +213,6 @@ exports.getProfile = async (req, res) => {
   } catch (error) {
     console.error("GET PROFILE ERROR:", error);
     res.status(500).json({ 
-      success: false,
       message: "Failed to fetch profile",
       error: error.message 
     });
@@ -224,9 +221,7 @@ exports.getProfile = async (req, res) => {
 
 
 
-
-
-// controllers/authController.js - updateProfile function
+// controllers/authController.js - FIXED updateProfile function
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -276,18 +271,16 @@ exports.updateProfile = async (req, res) => {
 
     const updatedUser = await user.save();
 
+    // Return consistent format with other endpoints
     res.json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone || '',
-        address: updatedUser.address || '',
-        isAdmin: updatedUser.isAdmin,
-        createdAt: updatedUser.createdAt
-      }
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone || '',
+      address: updatedUser.address || '',
+      isAdmin: updatedUser.isAdmin,
+      createdAt: updatedUser.createdAt,
+      message: "Profile updated successfully"
     });
     
   } catch (error) {
@@ -296,7 +289,6 @@ exports.updateProfile = async (req, res) => {
     // Handle different types of errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
-        success: false,
         message: "Validation error",
         error: error.message
       });
@@ -304,13 +296,11 @@ exports.updateProfile = async (req, res) => {
     
     if (error.code === 11000) {
       return res.status(400).json({ 
-        success: false,
         message: "Email already exists" 
       });
     }
     
     res.status(500).json({ 
-      success: false,
       message: "Failed to update profile",
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
