@@ -173,3 +173,14 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Product.distinct("category");
+    res.json(categories);
+  } catch (err) {
+    console.error("GET CATEGORIES ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
