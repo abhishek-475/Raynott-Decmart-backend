@@ -156,3 +156,35 @@ exports.updateUserRole = async (req, res) => {
         res.status(500).json({ message: "Failed to update user role" });
     }
 };
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Prevent self-deletion
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: "Cannot delete your own account" });
+        }
+
+        
+
+        await User.findByIdAndDelete(req.params.id);
+
+        res.json({
+            message: "User deleted successfully",
+            deletedUser: {
+                _id: user._id,
+                name: user.name,
+                email: user.email
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Failed to delete user" });
+    }
+};
