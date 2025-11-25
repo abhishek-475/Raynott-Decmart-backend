@@ -226,6 +226,7 @@ exports.getProfile = async (req, res) => {
 
 
 
+// controllers/authController.js - updateProfile function
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -237,27 +238,69 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
+    // Validate required fields
+    if (!req.body.name || !req.body.name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required"
+      });
+    }
+
+    if (!req.body.email || !req.body.email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (req.body.email !== user.email) {
+      const existingUser = await User.findOne({ 
+        email: req.body.email,
+        _id: { $ne: req.user._id } // Exclude current user
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists"
+        });
+      }
+    }
+
     // Update allowed fields
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    user.phone = req.body.phone || user.phone;
-    user.address = req.body.address || user.address;
+    user.name = req.body.name.trim();
+    user.email = req.body.email.trim().toLowerCase();
+    user.phone = req.body.phone ? req.body.phone.trim() : user.phone;
+    user.address = req.body.address ? req.body.address.trim() : user.address;
 
     const updatedUser = await user.save();
 
     res.json({
       success: true,
       message: "Profile updated successfully",
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      phone: updatedUser.phone || '',
-      address: updatedUser.address || '',
-      isAdmin: updatedUser.isAdmin,
-      createdAt: updatedUser.createdAt
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone || '',
+        address: updatedUser.address || '',
+        isAdmin: updatedUser.isAdmin,
+        createdAt: updatedUser.createdAt
+      }
     });
+    
   } catch (error) {
     console.error("UPDATE PROFILE ERROR:", error);
+    
+    // Handle different types of errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        error: error.message
+      });
+    }
     
     if (error.code === 11000) {
       return res.status(400).json({ 
@@ -269,7 +312,7 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: "Failed to update profile",
-      error: error.message 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };
