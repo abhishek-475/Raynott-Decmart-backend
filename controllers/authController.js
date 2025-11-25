@@ -188,3 +188,87 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: "Failed to delete user" });
     }
 };
+
+
+
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+
+    res.json({
+      success: true,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      isAdmin: user.isAdmin,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch profile",
+      error: error.message 
+    });
+  }
+};
+
+
+
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+
+    // Update allowed fields
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.phone = req.body.phone || user.phone;
+    user.address = req.body.address || user.address;
+
+    const updatedUser = await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      address: updatedUser.address,
+      isAdmin: updatedUser.isAdmin,
+      createdAt: updatedUser.createdAt
+    });
+  } catch (error) {
+    console.error(error);
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Email already exists" 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to update profile",
+      error: error.message 
+    });
+  }
+};
