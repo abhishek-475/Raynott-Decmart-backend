@@ -207,13 +207,13 @@ exports.getProfile = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      phone: user.phone,
-      address: user.address,
+      phone: user.phone || '',
+      address: user.address || '',
       isAdmin: user.isAdmin,
       createdAt: user.createdAt
     });
   } catch (error) {
-    console.error(error);
+    console.error("GET PROFILE ERROR:", error);
     res.status(500).json({ 
       success: false,
       message: "Failed to fetch profile",
@@ -221,6 +221,7 @@ exports.getProfile = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -250,13 +251,13 @@ exports.updateProfile = async (req, res) => {
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
-      phone: updatedUser.phone,
-      address: updatedUser.address,
+      phone: updatedUser.phone || '',
+      address: updatedUser.address || '',
       isAdmin: updatedUser.isAdmin,
       createdAt: updatedUser.createdAt
     });
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE PROFILE ERROR:", error);
     
     if (error.code === 11000) {
       return res.status(400).json({ 
